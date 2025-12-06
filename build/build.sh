@@ -17,8 +17,9 @@ DONE() {
     echo ""
 }
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-OUT_DIR=$SCRIPT_DIR/out
+BUILD_DIR="$(cd "$(dirname "$0")" && pwd)"
+OUT_DIR="$BUILD_DIR/out"
+PROJECT_ROOT_DIR="$BUILD_DIR/.."
 
 if [ -d "$OUT_DIR" ]; then
     INFO "Clean up old out directory..."
@@ -28,13 +29,13 @@ mkdir -p "$OUT_DIR"
 cd "$OUT_DIR"
 INFO "output dir: $OUT_DIR"
 
-SDK_PATH="$HOME/pico/pico-sdk"
+SDK_PATH="$PROJECT_ROOT_DIR/pico-sdk"
 BOARD_TYPE="pico2_w"
 INFO "set PICO_SDK_PATH: $SDK_PATH"
 INFO "set PICO_BOARD   : $BOARD_TYPE"
 
 START "Running CMake configuration"
-cmake -DPICO_SDK_PATH="$SDK_PATH" -DPICO_BOARD="$BOARD_TYPE" ../
+cmake -DPICO_SDK_PATH="$SDK_PATH" -DPICO_BOARD="$BOARD_TYPE" ..
 DONE "CMake configuration complete"
 
 START "Compiling project"
