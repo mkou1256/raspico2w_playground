@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
 
+set(PROJECT_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/..)
+set(SRC_DIR ${PROJECT_ROOT}/src)
+
 # ---- SDK Import ----
 include(pico_sdk_import.cmake)
 
@@ -12,7 +15,7 @@ pico_sdk_init()
 
 # ---- Add executable ----
 add_executable(blink 
-    blink.c
+    ${SRC_DIR}/blink.c
 )
 
 # ---- Link required libraries ----
