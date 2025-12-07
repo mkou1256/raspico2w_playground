@@ -9,15 +9,38 @@
 
 #define DBG_PRINT_BUFFER_SIZE  256
 uint8_t s_buffer[DBG_PRINT_BUFFER_SIZE];
+const char* dbg_level_strings[4] = {
+    "DEBUG",
+    "INFO ",
+    "WARN ",
+    "ERROR"
+};
 
-int32_t dbgPrint(const char* format, ...)
+// テキスト色
+#define ANSI_COLOR_BLACK   "\033[30m"
+#define ANSI_COLOR_RED     "\033[31m"
+#define ANSI_COLOR_YELLOW  "\033[33m"
+#define ANSI_COLOR_BLUE    "\033[34m"
+#define ANSI_COLOR_CYAN    "\033[36m"
+#define ANSI_COLOR_WHITE   "\033[37m"
+#define ANSI_COLOR_RESET   "\033[0m"
+
+const char* dbg_level_colors[4] = {
+    ANSI_COLOR_WHITE,   // DEBUG
+    ANSI_COLOR_CYAN,    // INFO
+    ANSI_COLOR_YELLOW,  // WARN
+    ANSI_COLOR_RED      // ERROR
+};
+
+int32_t dbgPrint(dbg_level_t level, const char* format, ...)
 {
     memset(s_buffer, 0, DBG_PRINT_BUFFER_SIZE);
     
-    // [DBG][{clock}] のプレフィックスを追加
+    // [LEVEL][{clock}] のプレフィックスを追加
+    // levelに合わせて色付けも行う
     uint32_t clock = to_ms_since_boot(get_absolute_time());
     int32_t prefix_len = snprintf((char*)s_buffer, DBG_PRINT_BUFFER_SIZE, 
-                                   "[DBG][%06u] ", clock);
+                                   "%s[%s][%06u] ", dbg_level_colors[level], dbg_level_strings[level], clock);
     
     if (prefix_len < 0 || prefix_len >= DBG_PRINT_BUFFER_SIZE) {
         return -1; // バッファ不足
@@ -33,6 +56,14 @@ int32_t dbgPrint(const char* format, ...)
     if (msg_len < 0) {
         return -1; // エラー
     }
+
+    // 色をリセットする
+    int32_t reset_len = snprintf((char*)s_buffer + prefix_len + msg_len, 
+                                 DBG_PRINT_BUFFER_SIZE - prefix_len - msg_len, 
+                                 "%s", ANSI_COLOR_RESET);
+    if (reset_len < 0) {
+        return -1; // エラー
+    }
     
     // 実際に書き込まれた総長さを計算
     int32_t total_len = prefix_len + msg_len;
@@ -41,10 +72,10 @@ int32_t dbgPrint(const char* format, ...)
         total_len = DBG_PRINT_BUFFER_SIZE - 1;
     }
     
-    // USBバッファにデータを追加
-    usbBufferTx((const char*)s_buffer, (size_t)total_len);
-    // USBバッファの内容を送信
-    usbFlashTxBuffer();
-    
-    return total_len;
+    // USB経由で送信
+    int32_t sent_len = usbTx((const char*)s_buffer, total_len);
+    if (sent_len < 0) {
+        return sent_len; // エラー
+    }
+    return E_SUCCESS;
 }

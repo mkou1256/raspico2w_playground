@@ -28,7 +28,7 @@ int32_t usbCommInit()
     return E_SUCCESS;
 }
 
-int32_t usbBufferTx(const char* str, size_t len)
+int32_t usbBufferEnqueue(const char* str, size_t len)
 {
     if (str == NULL || len == 0) {
         return 0;
@@ -40,7 +40,7 @@ int32_t usbBufferTx(const char* str, size_t len)
 
 int32_t usbFlashTxBuffer()
 {
-    int32_t ret = 0;
+    int32_t ret = E_OTHER;
     ringBuffer_t* pRb = &s_usbTxRingBuffer;
     uint8_t workBuffer[USB_TX_BUFFER_SIZE];
 
@@ -49,4 +49,23 @@ int32_t usbFlashTxBuffer()
         ret = stdio_put_string((const char*)workBuffer, len, false, false); // TODO: 低レベルAPIに変更
     }
     return ret;
+}
+
+int32_t usbTx(const char* str, size_t len)
+{
+    int32_t totalSent = 0;
+    int32_t ret = E_OTHER;
+    while (totalSent < len) {
+        ret = usbBufferEnqueue(str + totalSent, len - totalSent);
+        if (ret < 0) {
+            return ret; // エラー
+        }
+        totalSent += ret;
+
+        ret = usbFlashTxBuffer();
+        if (ret < 0) {
+            return ret; // エラー
+        }
+    }
+    return totalSent;
 }

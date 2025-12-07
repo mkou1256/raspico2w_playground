@@ -34,11 +34,14 @@ int main() {
 
     while (true) {
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);  // LED ON
-        dbgPrint("LED ON\n");
-        sleep_ms(500);
+        sleep_ms(1000);
 
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);  // LED OFF
-        dbgPrint("LED OFF\n");
-        sleep_ms(500);
+        sleep_ms(1000);
+
+        dbgPrint(DBG_LEVEL_DEBUG, "This is a debug message.\r\n");
+        dbgPrint(DBG_LEVEL_INFO, "This is an info message.\r\n");
+        dbgPrint(DBG_LEVEL_WARN, "This is a warning message.\r\n");
+        dbgPrint(DBG_LEVEL_ERROR, "This is an error message.\r\n");
     }
 }
