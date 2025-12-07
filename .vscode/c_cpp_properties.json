@@ -6,16 +6,18 @@
             "compilerPath": "/usr/bin/arm-none-eabi-gcc",
             "intelliSenseMode": "gcc-x64",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/pico-sdk/**"
+                "${workspaceFolder}/src/include/**",
+                "${workspaceFolder}/pico-sdk/**",
+                "${workspaceFolder}/**"
             ],
             "defines": [
                 "PICO_BOARD=pico2_w"
             ],
             "browse": {
                 "path": [
-                    "${workspaceFolder}/**",
-                    "${workspaceFolder}/pico-sdk/**"
+                    "${workspaceFolder}/src/include/**",
+                    "${workspaceFolder}/pico-sdk/**",
+                    "${workspaceFolder}/**"
                 ],
                 "limitSymbolsToIncludedHeaders": true
             }
