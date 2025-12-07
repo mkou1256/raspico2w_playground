@@ -29,7 +29,7 @@ mkdir -p "$OUT_DIR"
 cd "$OUT_DIR"
 INFO "output dir: $OUT_DIR"
 
-SDK_PATH="$PROJECT_ROOT_DIR/pico-sdk"
+SDK_PATH="$PROJECT_ROOT_DIR/libs/pico-sdk"
 BOARD_TYPE="pico2_w"
 INFO "set PICO_SDK_PATH: $SDK_PATH"
 INFO "set PICO_BOARD   : $BOARD_TYPE"

@@ -1,5 +1,5 @@
 {
     "git.ignoredRepositories": [
-        "${workspaceFolder}/pico-sdk"
+        "${workspaceFolder}/libs/pico-sdk"
     ]
 }
