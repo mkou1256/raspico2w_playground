@@ -5,7 +5,7 @@ set(SRC_DIR ${PROJECT_ROOT}/src)
 
 # ---- SDK Import ----
 include(pico_sdk_import.cmake)
-
+include(FreeRTOS_Kernel_import.cmake)
 project(pico2w C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -32,6 +32,8 @@ target_include_directories(pico2w PRIVATE ${SRC_DIR}/include)
 target_link_libraries(pico2w 
     pico_stdlib
     pico_cyw43_arch_none
+    FreeRTOS-Kernel
+    FreeRTOS-Kernel-Heap4
 )
 
 # ---- Enable USB or UART (optional) ----
