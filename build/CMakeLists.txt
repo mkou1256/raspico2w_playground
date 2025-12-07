@@ -14,19 +14,21 @@ set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 
 # ---- Add executable ----
+file(GLOB SYSTEM_SRC CONFIGURE_DEPENDS ${SRC_DIR}/system/*.c)
+file(GLOB APP_SRC CONFIGURE_DEPENDS ${SRC_DIR}/app/*.c)
+file(GLOB CONTROL_SRC CONFIGURE_DEPENDS ${SRC_DIR}/control/*.c)
+file(GLOB UTILS_SRC CONFIGURE_DEPENDS ${SRC_DIR}/utils/*.c)
 add_executable(pico2w 
-    ${SRC_DIR}/system/main.c
-    ${SRC_DIR}/app/dbg_print.c
-    ${SRC_DIR}/control/usb_comm.c
-    ${SRC_DIR}/utils/ring_buffer.c
+    ${SYSTEM_SRC}
+    ${APP_SRC}
+    ${CONTROL_SRC}
+    ${UTILS_SRC}
 )
 
 # ---- Add include directories ----
 target_include_directories(pico2w PRIVATE ${SRC_DIR}/include)
 
 # ---- Link required libraries ----
-# pico_stdlib = 普通のIO
-# pico_cyw43_arch_none/WIFI = Pico W LED制御に必要
 target_link_libraries(pico2w 
     pico_stdlib
     pico_cyw43_arch_none
