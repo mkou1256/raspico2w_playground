@@ -32,7 +32,6 @@ target_include_directories(pico2w PRIVATE ${SRC_DIR}/include)
 target_link_libraries(pico2w 
     pico_stdlib
     pico_cyw43_arch_none
-    # FreeRTOS-Kernel
     FreeRTOS-Kernel-Heap4
 )
 
