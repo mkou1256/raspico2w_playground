@@ -1,5 +1,6 @@
 {
     "git.ignoredRepositories": [
         "${workspaceFolder}/libs/pico-sdk"
-    ]
+    ],
+    "cmake.sourceDirectory": "/home/mkou/pico/raspico2w_playground/build"
 }
