@@ -29,19 +29,33 @@ mkdir -p "$OUT_DIR"
 cd "$OUT_DIR"
 INFO "output dir: $OUT_DIR"
 
-SDK_PATH="$PROJECT_ROOT_DIR/libs/pico-sdk"
-BOARD_TYPE="pico2_w"
-PICO_PLATFORM="rp2350"
-FREERTOS_KERNEL_PATH="$PROJECT_ROOT_DIR/libs/FreeRTOS-Kernel"
-INFO "set PICO_SDK_PATH         : $SDK_PATH"
-INFO "set PICO_BOARD            : $BOARD_TYPE"
-INFO "set PICO_PLATFORM         : $PICO_PLATFORM"
-INFO "set FREERTOS_KERNEL_PATH  : $FREERTOS_KERNEL_PATH"
+CMAKE_OPTIONS=(
+    -DPICO_SDK_PATH="$PROJECT_ROOT_DIR/libs/pico-sdk"
+    -DPICO_BOARD="pico2_w"
+    -DPICO_PLATFORM="rp2350"
+    -DFREERTOS_KERNEL_PATH="$PROJECT_ROOT_DIR/libs/FreeRTOS-Kernel"
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+    )
 
 START "Running CMake configuration"
-cmake -DPICO_SDK_PATH="$SDK_PATH" -DPICO_BOARD="$BOARD_TYPE" -DPICO_PLATFORM="$PICO_PLATFORM" -DFREERTOS_KERNEL_PATH="$FREERTOS_KERNEL_PATH" ..
-DONE "CMake configuration complete"
+INFO "CMake Options"
+for option in "${CMAKE_OPTIONS[@]}"; do
+    INFO "$option"
+done
+cmake "${CMAKE_OPTIONS[@]}" ..
+if [ $? -eq 0 ]; then
+    ln -sf "$OUT_DIR/compile_commands.json" "$PROJECT_ROOT_DIR/compile_commands.json" 
+    DONE "CMake configuration complete"
+else
+    ERROR "CMake configuration failed"
+    exit 1
+fi
 
 START "Compiling project"
 make -j$(nproc)
-DONE "Build completed successfully"
+if [ $? -eq 0 ]; then
+    DONE "Build completed successfully"
+else
+    ERROR "Build failed"
+    exit 1
+fi

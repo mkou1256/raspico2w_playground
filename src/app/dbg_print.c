@@ -1,13 +1,15 @@
 #include "dbg_print.h"
 #include "typedef.h"
 #include "usb_comm.h"
+#include "rtos_wrapper.h"
 #include "pico/stdlib.h"
 #include "pico/time.h"
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
-#define DBG_PRINT_BUFFER_SIZE  256
+#define DBG_PRINT_BUFFER_SIZE  512
 uint8_t s_buffer[DBG_PRINT_BUFFER_SIZE];
 const char* dbg_level_strings[4] = {
     "DEBUG",
@@ -32,18 +34,38 @@ const char* dbg_level_colors[4] = {
     ANSI_COLOR_RED      // ERROR
 };
 
+// dbg bufferのmutex資源
+mtx_handle_t s_mtxDbgPrint = NULL;
+
+int8_t init_dbgPrint(void)
+{
+   s_mtxDbgPrint = make_mtx();
+   if (s_mtxDbgPrint == NULL) {
+       // TODO: Assert
+       return E_INIT;
+   }
+   return E_SUCCESS;
+}
+
 int32_t dbgPrint(dbg_level_t level, const char* format, ...)
 {
+    take_mtx(s_mtxDbgPrint);
+    int32_t ret = E_OTHER;
+
     memset(s_buffer, 0, DBG_PRINT_BUFFER_SIZE);
     
     // [LEVEL][{clock}] のプレフィックスを追加
     // levelに合わせて色付けも行う
     uint32_t clock = to_ms_since_boot(get_absolute_time());
     int32_t prefix_len = snprintf((char*)s_buffer, DBG_PRINT_BUFFER_SIZE, 
-                                   "%s[%s][%06u] ", dbg_level_colors[level], dbg_level_strings[level], clock);
+                                   "%s[%s][%06u] ", 
+                                   dbg_level_colors[level], 
+                                   dbg_level_strings[level], 
+                                   clock);
     
     if (prefix_len < 0 || prefix_len >= DBG_PRINT_BUFFER_SIZE) {
-        return -1; // バッファ不足
+        ret = E_BUFSIZE; // バッファ不足
+        goto exit;
     }
 
     // 残りのバッファにユーザーメッセージを追加
@@ -54,19 +76,21 @@ int32_t dbgPrint(dbg_level_t level, const char* format, ...)
                                 format, args);
     va_end(args);
     if (msg_len < 0) {
-        return -1; // エラー
+        ret = E_OTHER;
+        goto exit;
     }
 
     // 色をリセットする
-    int32_t reset_len = snprintf((char*)s_buffer + prefix_len + msg_len, 
+    int32_t suffix_len = snprintf((char*)s_buffer + prefix_len + msg_len, 
                                  DBG_PRINT_BUFFER_SIZE - prefix_len - msg_len, 
                                  "%s", ANSI_COLOR_RESET);
-    if (reset_len < 0) {
-        return -1; // エラー
+    if (suffix_len < 0) {
+        ret = E_OTHER;
+        goto exit;
     }
     
     // 実際に書き込まれた総長さを計算
-    int32_t total_len = prefix_len + msg_len;
+    int32_t total_len = prefix_len + msg_len + suffix_len;
     if (total_len >= DBG_PRINT_BUFFER_SIZE) {
         // 切り詰められた場合、実際のバッファサイズ-1（null終端分）
         total_len = DBG_PRINT_BUFFER_SIZE - 1;
@@ -75,7 +99,13 @@ int32_t dbgPrint(dbg_level_t level, const char* format, ...)
     // USB経由で送信
     int32_t sent_len = usbTx((const char*)s_buffer, total_len);
     if (sent_len < 0) {
-        return sent_len; // エラー
+        ret = sent_len; // 送り切れる or 負のエラーが返る
+        goto exit;
     }
-    return E_SUCCESS;
+    ret = E_SUCCESS;
+
+exit:
+    give_mtx(s_mtxDbgPrint);
+    return ret;
 }
+

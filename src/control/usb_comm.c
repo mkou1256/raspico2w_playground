@@ -38,7 +38,7 @@ int32_t usbBufferEnqueue(const char* str, size_t len)
     return ringBufferEnqueue(pRb, (const uint8_t*)str, len);
 }
 
-int32_t usbFlashTxBuffer()
+int32_t usbFlushTxBuffer()
 {
     int32_t ret = E_OTHER;
     ringBuffer_t* pRb = &s_usbTxRingBuffer;
@@ -46,7 +46,12 @@ int32_t usbFlashTxBuffer()
 
     int32_t len = ringBufferDequeue(pRb, workBuffer, USB_TX_BUFFER_SIZE);
     if (len > 0) {
-        ret = stdio_put_string((const char*)workBuffer, len, false, false); // TODO: 低レベルAPIに変更
+        ret = stdio_put_string((const char*)workBuffer, len, false, false);
+        // TODO: 低レベルAPIに変更
+        if (ret < 0) {
+            ret = E_USBCOMM;
+        }                                                                
+
     }
     return ret;
 }
@@ -62,7 +67,7 @@ int32_t usbTx(const char* str, size_t len)
         }
         totalSent += ret;
 
-        ret = usbFlashTxBuffer();
+        ret = usbFlushTxBuffer();
         if (ret < 0) {
             return ret; // エラー
         }

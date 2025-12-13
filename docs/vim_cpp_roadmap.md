@@ -231,26 +231,118 @@ int main() {
 
 ---
 
-### Phase 4: C/C++開発の基礎環境（目安: 2週間）
+### Phase 4: Neovimへの早期移行（目安: 2-3日）
 
 #### このフェーズで得られるもの
 **できるようになること:**
-- 関数名を途中まで入力すると候補が自動表示される
-- `printf`の引数をリアルタイムで確認できる
-- 関数の定義場所に一瞬でジャンプ（gd一発）
-- 複数行を一括でコメントアウト/解除
-- タイプミスによるコンパイルエラーが激減
-- エラー箇所に自動でジャンプして修正
+- VimからNeovimへスムーズに移行
+- 既存の設定をそのまま利用
+- より高速な動作環境を獲得
+- 最新のLSP機能にアクセス可能に
+- coc.nvimの問題を回避
 
 **どれくらい楽になるか:**
-- 従来: 関数名を覚えられず、毎回マニュアルやGoogle検索
-- Phase 4後: 途中まで入力すると候補が出る、Tabで補完完了（10秒→2秒）
-- 「この関数どこで定義したっけ？」→ gd一発で移動（30秒→1秒）
-- デバッグコメント追加: 5行選択してgc（10秒→2秒）
-- コンパイルエラー: エラーメッセージから該当箇所に自動ジャンプ
-- **VSCodeの基本的な補完機能に到達**
+- 従来（Vim）: coc.nvimが古いVimバージョンで動作しない
+- Phase 4後: Neovimのネイティブ機能で問題解決
+- プラグインの互換性問題から解放
+- より安定した開発環境を獲得
+- **この移行により、Phase 5以降がよりスムーズに**
 
 #### 学習内容
+
+1. **Neovimのインストール**
+   ```bash
+   # Ubuntu 22.04の場合
+   sudo apt install neovim
+   
+   # 最新版が欲しい場合（推奨）
+   sudo add-apt-repository ppa:neovim-ppa/unstable
+   sudo apt update
+   sudo apt install neovim
+   
+   # バージョン確認
+   nvim --version
+   ```
+
+2. **既存のVim設定を移行**
+   ```bash
+   # Neovimの設定ディレクトリを作成
+   mkdir -p ~/.config/nvim
+   
+   # VimのプラグインディレクトリもNeovimで使う
+   # （vim-plugは両方で共有可能）
+   
+   # 既存の.vimrcをNeovimで使う（互換モード）
+   ln -s ~/.vimrc ~/.config/nvim/init.vim
+   ```
+
+3. **Neovimの起動と動作確認**
+   ```bash
+   # Neovimを起動
+   nvim
+   
+   # Vim内で健全性チェック
+   :checkhealth
+   ```
+
+4. **既存プラグインの動作確認**
+   ```vim
+   " Neovim内で実行
+   :PlugInstall
+   :PlugUpdate
+   
+   " NERDTreeが動くか確認
+   :NERDTreeToggle
+   
+   " vim-airlineが表示されているか確認
+   ```
+
+5. **エイリアスの設定（オプション）**
+   ```bash
+   # ~/.bashrcまたは~/.zshrcに追加
+   alias vim='nvim'
+   alias vi='nvim'
+   
+   # 反映
+   source ~/.bashrc  # または source ~/.zshrc
+   ```
+
+#### クリア条件
+- [ ] Neovimがインストールされた
+- [ ] `nvim`コマンドで起動できる
+- [ ] `:checkhealth`を実行してエラーがない（警告は無視してOK）
+- [ ] 既存のプラグイン（NERDTree、vim-airline）が正常に動作する
+- [ ] Phase 1-3で学んだ操作が全て同じように使える
+- [ ] C言語のファイルを開いてシンタックスハイライトが表示される
+
+#### 練習課題
+- Neovimで以前作成したC言語ファイルを開く
+- 編集してみて、Vimと同じように使えることを確認
+- `:checkhealth`の結果を読んで、環境の状態を把握する
+
+---
+
+### Phase 5: C/C++開発の基礎環境（Neovim版）（目安: 1週間）
+
+#### このフェーズで得られるもの
+**できるようになること:**
+- ネイティブLSPでコード補完が動作
+- 関数定義にジャンプできる
+- コメントアウトが一瞬で完了
+- 括弧の自動補完
+- エラーがリアルタイムで表示される
+- **coc.nvimなしでVSCode並みの補完機能**
+
+**どれくらい楽になるか:**
+- 従来（プラグインなし）: 関数名を全て手入力、スペルミス多発
+- Phase 5後: 途中まで入力すると候補が出る、Tabで補完完了（10秒→2秒）
+- 「この関数どこで定義したっけ？」→ gd一発で移動（30秒→1秒）
+- デバッグコメント追加: 5行選択してgc（10秒→2秒）
+- **VSCodeの基本的な補完機能に到達**
+- **Phase 4で移行したことで、この設定が非常にスムーズ**
+
+#### 学習内容
+
 1. **必要なツールのインストール**
    ```bash
    # コンパイラとツール
@@ -260,93 +352,213 @@ int main() {
    sudo apt install clangd-12
    sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
    
-   # ctagsのインストール
-   sudo apt install universal-ctags
+   # Node.js（一部プラグインで必要）
+   sudo apt install nodejs npm
    ```
 
-2. **開発支援プラグインの追加**
-   ```vim
-   call plug#begin('~/.vim/plugged')
+2. **init.vimをinit.luaに移行準備**
+   ```bash
+   # 既存のinit.vimをバックアップ
+   mv ~/.config/nvim/init.vim ~/.config/nvim/init.vim.bak
    
-   " 既存のプラグイン
-   Plug 'preservim/nerdtree'
-   Plug 'vim-airline/vim-airline'
-   Plug 'vim-airline/vim-airline-themes'
-   Plug 'morhetz/gruvbox'
-   
-   " 開発支援
-   Plug 'jiangmiao/auto-pairs'         " 括弧の自動補完
-   Plug 'tpope/vim-commentary'         " コメントアウト補助
-   Plug 'neoclide/coc.nvim', {'branch': 'release'}  " LSPクライアント
-   Plug 'preservim/tagbar'             " タグバー
-   
-   call plug#end()
-   
-   " Tagbarのキーマッピング
-   nnoremap <leader>t :TagbarToggle<CR>
+   # init.luaを作成
+   nvim ~/.config/nvim/init.lua
    ```
 
-3. **coc.nvimの設定**
-   - `:PlugInstall`でインストール後
-   - `:CocInstall coc-clangd`を実行
+3. **init.luaの基本設定**
+   ```lua
+   -- 基本設定
+   vim.opt.number = true
+   vim.opt.relativenumber = true
+   vim.opt.cursorline = true
+   vim.opt.showmatch = true
+   vim.opt.incsearch = true
+   vim.opt.hlsearch = true
+   vim.opt.ignorecase = true
+   vim.opt.smartcase = true
    
-   ```vim
-   " coc.nvim設定
-   " Tab補完
-   inoremap <silent><expr> <TAB>
-         \ coc#pum#visible() ? coc#pum#next(1) :
-         \ "\<Tab>"
-   inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+   -- インデント設定
+   vim.opt.tabstop = 4
+   vim.opt.shiftwidth = 4
+   vim.opt.expandtab = true
+   vim.opt.autoindent = true
+   vim.opt.smartindent = true
    
-   " Enterで補完確定
-   inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
-                                 \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+   -- エンコーディング
+   vim.opt.encoding = 'utf-8'
+   vim.opt.fileencoding = 'utf-8'
    
-   " 定義ジャンプ
-   nmap <silent> gd <Plug>(coc-definition)
-   nmap <silent> gr <Plug>(coc-references)
+   -- その他
+   vim.opt.termguicolors = true
+   vim.opt.wildmenu = true
+   vim.cmd('syntax on')
    
-   " ドキュメント表示
-   nnoremap <silent> K :call ShowDocumentation()<CR>
-   function! ShowDocumentation()
-     if CocAction('hasProvider', 'hover')
-       call CocActionAsync('doHover')
-     else
-       call feedkeys('K', 'in')
-     endif
-   endfunction
+   -- リーダーキー
+   vim.g.mapleader = ' '
    ```
 
-4. **コメントアウトの使い方**
-   - ビジュアルモードで選択 → `gc`でコメントトグル
+4. **lazy.nvimのインストール**
+   ```lua
+   -- init.luaに追加
+   
+   -- lazy.nvimのブートストラップ
+   local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+   if not vim.loop.fs_stat(lazypath) then
+     vim.fn.system({
+       "git",
+       "clone",
+       "--filter=blob:none",
+       "https://github.com/folke/lazy.nvim.git",
+       "--branch=stable",
+       lazypath,
+     })
+   end
+   vim.opt.rtp:prepend(lazypath)
+   
+   -- プラグイン設定
+   require("lazy").setup({
+     -- ファイル管理
+     { "preservim/nerdtree" },
+     
+     -- ステータスライン
+     { "nvim-lualine/lualine.nvim" },
+     
+     -- カラースキーム
+     { "crusoexia/vim-monokai" },
+     
+     -- 編集支援
+     { "windwp/nvim-autopairs" },
+     { "numToStr/Comment.nvim" },
+   })
+   
+   -- カラースキーム設定
+   vim.cmd('colorscheme monokai')
+   
+   -- プラグインの設定
+   require('lualine').setup()
+   require('nvim-autopairs').setup()
+   require('Comment').setup()
+   
+   -- キーマッピング
+   vim.keymap.set('n', '<C-n>', ':NERDTreeToggle<CR>')
+   ```
 
-5. **Makefileの基本**
-   ```makefile
-   CC = gcc
-   CFLAGS = -Wall -g
+5. **LSP（Language Server Protocol）の設定**
+   ```lua
+   -- lazy.nvimのプラグインリストに追加
+   require("lazy").setup({
+     -- 既存のプラグイン
+     { "preservim/nerdtree" },
+     { "nvim-lualine/lualine.nvim" },
+     { "crusoexia/vim-monokai" },
+     { "windwp/nvim-autopairs" },
+     { "numToStr/Comment.nvim" },
+     
+     -- LSP関連
+     { "neovim/nvim-lspconfig" },
+     { "hrsh7th/nvim-cmp" },
+     { "hrsh7th/cmp-nvim-lsp" },
+     { "hrsh7th/cmp-buffer" },
+     { "hrsh7th/cmp-path" },
+     { "L3MON4D3/LuaSnip" },
+     { "saadparwaiz1/cmp_luasnip" },
+   })
+   ```
+
+6. **LSPとnvim-cmpの詳細設定**
+   ```lua
+   -- LSPの設定
+   local lspconfig = require('lspconfig')
+   local capabilities = require('cmp_nvim_lsp').default_capabilities()
    
-   all: main
+   -- clangd（C/C++）の設定
+   lspconfig.clangd.setup{
+     capabilities = capabilities,
+     cmd = { "clangd", "--background-index" },
+     filetypes = { "c", "cpp", "objc", "objcpp" },
+   }
    
-   main: main.c
-   	$(CC) $(CFLAGS) -o main main.c
+   -- LSPキーマッピング
+   vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { desc = 'Go to definition' })
+   vim.keymap.set('n', 'K', vim.lsp.buf.hover, { desc = 'Hover documentation' })
+   vim.keymap.set('n', 'gr', vim.lsp.buf.references, { desc = 'Go to references' })
+   vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { desc = 'Rename' })
+   vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, { desc = 'Code action' })
    
-   clean:
-   	rm -f main
+   -- 補完の設定（nvim-cmp）
+   local cmp = require('cmp')
+   local luasnip = require('luasnip')
+   
+   cmp.setup({
+     snippet = {
+       expand = function(args)
+         luasnip.lsp_expand(args.body)
+       end,
+     },
+     mapping = cmp.mapping.preset.insert({
+       ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+       ['<C-f>'] = cmp.mapping.scroll_docs(4),
+       ['<C-Space>'] = cmp.mapping.complete(),
+       ['<C-e>'] = cmp.mapping.abort(),
+       ['<CR>'] = cmp.mapping.confirm({ select = true }),
+       ['<Tab>'] = cmp.mapping(function(fallback)
+         if cmp.visible() then
+           cmp.select_next_item()
+         elseif luasnip.expand_or_jumpable() then
+           luasnip.expand_or_jump()
+         else
+           fallback()
+         end
+       end, { 'i', 's' }),
+       ['<S-Tab>'] = cmp.mapping(function(fallback)
+         if cmp.visible() then
+           cmp.select_prev_item()
+         elseif luasnip.jumpable(-1) then
+           luasnip.jump(-1)
+         else
+           fallback()
+         end
+       end, { 'i', 's' }),
+     }),
+     sources = cmp.config.sources({
+       { name = 'nvim_lsp' },
+       { name = 'luasnip' },
+     }, {
+       { name = 'buffer' },
+       { name = 'path' },
+     })
+   })
+   ```
+
+7. **便利なキーマッピング追加**
+   ```lua
+   -- ウィンドウ移動
+   vim.keymap.set('n', '<C-h>', '<C-w>h')
+   vim.keymap.set('n', '<C-j>', '<C-w>j')
+   vim.keymap.set('n', '<C-k>', '<C-w>k')
+   vim.keymap.set('n', '<C-l>', '<C-w>l')
+   
+   -- 保存とビルド
+   vim.keymap.set('n', '<leader>w', ':w<CR>')
+   vim.keymap.set('n', '<leader>m', ':make<CR>')
+   
+   -- 検索ハイライトを消す
+   vim.keymap.set('n', '<leader>h', ':nohlsearch<CR>')
    ```
 
 #### クリア条件
-- [ ] coc.nvimがインストールされ、`coc-clangd`が動作している
+- [ ] Neovimでinit.luaが動作している
+- [ ] lazy.nvimでプラグイン管理ができる
 - [ ] コード補完が機能する（`printf`と打ってTabで候補が出る）
 - [ ] 関数定義にジャンプできる（`gd`で移動）
 - [ ] `gc`でコメントアウト/解除ができる
 - [ ] `()`や`{}`を入力すると自動で閉じ括弧が入力される
-- [ ] Tagbarで関数一覧が表示できる
-- [ ] Vim内から`:make`でコンパイルできる
+- [ ] エラーや警告がインラインで表示される
 - [ ] 以下の課題プログラムを書いて、補完機能を使いながらコーディングできる
 
 #### 練習課題
 ```c
-// 以下のプログラムをVimで作成（補完機能を活用）
+// 以下のプログラムをNeovimで作成（補完機能を活用）
 #include <stdio.h>
 #include <string.h>
 
@@ -363,9 +575,16 @@ int main() {
 }
 ```
 
+**確認事項:**
+- `printf`と入力途中で補完候補が出る
+- `gd`で関数定義にジャンプできる
+- `K`でホバードキュメントが表示される
+- 括弧やクォートが自動で閉じる
+- `:make`でコンパイルできる
+
 ---
 
-### Phase 5: 効率的な編集とナビゲーション（目安: 2週間）
+### Phase 6: 効率的な編集とナビゲーション（目安: 2週間）
 
 #### このフェーズで得られるもの
 **できるようになること:**
@@ -449,7 +668,103 @@ int main() {
 
 ---
 
-### Phase 6: Git統合とデバッグ環境（目安: 1-2週間）
+### Phase 6: 効率的な編集とナビゲーション（目安: 2週間）
+
+#### このフェーズで得られるもの
+**できるようになること:**
+- ファイル名の一部を入力するだけで目的のファイルを開ける
+- プロジェクト全体から文字列を一瞬で検索
+- 10個のファイルを同時に開いても迷わない
+- 同じ編集を100行に一括適用（マクロ）
+- 矩形選択で縦方向の編集が自在
+- ウィンドウ間を思考速度で移動
+
+**どれくらい楽になるか:**
+- 従来: `src/components/ui/button/primary.c`のようなパスを覚えて入力（20秒）
+- Phase 6後: `<leader>f`→`prim`と入力→Enterで開く（3秒）
+- プロジェクト全体で関数呼び出し箇所を探す: 1秒で全結果表示
+- 配列の初期化を100行分: マクロ記録→99回再生で10秒
+- 複数行のインデント調整: 矩形選択して一括編集（30秒→5秒）
+- **中規模プロジェクト（50ファイル程度）を快適に扱える**
+- **VSCodeのファジーファインダーと同等以上の速度**
+
+#### 学習内容
+
+1. **Telescopeのインストール（超高速ファジーファインダー）**
+   ```lua
+   -- lazy.nvimのプラグインリストに追加
+   {
+     'nvim-telescope/telescope.nvim',
+     dependencies = { 'nvim-lua/plenary.nvim' }
+   },
+   ```
+
+2. **ripgrepのインストール（高速検索ツール）**
+   ```bash
+   sudo apt install ripgrep
+   ```
+
+3. **Telescopeの設定**
+   ```lua
+   -- init.luaに追加
+   local builtin = require('telescope.builtin')
+   
+   -- ファイル検索
+   vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Find files' })
+   
+   -- 文字列検索（grep）
+   vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Live grep' })
+   
+   -- バッファ一覧
+   vim.keymap.set('n', '<leader>fb', builtin.buffers, { desc = 'Buffers' })
+   
+   -- ヘルプ検索
+   vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = 'Help tags' })
+   
+   -- 最近使ったファイル
+   vim.keymap.set('n', '<leader>fr', builtin.oldfiles, { desc = 'Recent files' })
+   ```
+
+4. **便利なキーマッピングの追加**
+   ```lua
+   -- バッファ切り替え
+   vim.keymap.set('n', '<leader>bn', ':bnext<CR>', { desc = 'Next buffer' })
+   vim.keymap.set('n', '<leader>bp', ':bprev<CR>', { desc = 'Previous buffer' })
+   vim.keymap.set('n', '<leader>bd', ':bdelete<CR>', { desc = 'Delete buffer' })
+   
+   -- ウィンドウ分割
+   vim.keymap.set('n', '<leader>v', ':vsplit<CR>', { desc = 'Vertical split' })
+   vim.keymap.set('n', '<leader>s', ':split<CR>', { desc = 'Horizontal split' })
+   ```
+
+5. **マクロの使い方を復習**
+   - `q` + レジスタ名（例: `qa`）でマクロ記録開始
+   - 編集操作を実行
+   - `q`で記録終了
+   - `@a`で再生、`100@a`で100回再生
+
+6. **ビジュアルブロックモードの活用**
+   - `Ctrl+v`で矩形選択モード
+   - `I`で先頭に挿入、`A`で末尾に追加
+   - `Esc`で全行に適用
+
+#### クリア条件
+- [ ] `<leader>ff`でファイルをファジー検索できる
+- [ ] `<leader>fg`でプロジェクト全体から文字列検索できる
+- [ ] Telescopeのプレビューウィンドウが表示される
+- [ ] 複数のウィンドウ間をCtrl+hjklで移動できる
+- [ ] マクロを記録して複数行に同じ編集を適用できる
+- [ ] 複数のファイルを開いて、バッファ間を素早く移動できる
+- [ ] Ctrl+vで矩形選択して、一括編集ができる
+
+#### 練習課題
+1. 複数のCファイルがあるプロジェクトで、特定の関数名を全ファイルから検索
+2. 10行の配列初期化コードをマクロで自動生成
+3. 5つのファイルを開いて、Telescopeでバッファ切り替え
+
+---
+
+### Phase 7: Git統合とデバッグ環境（目安: 1-2週間）
 
 #### このフェーズで得られるもの
 **できるようになること:**
@@ -518,7 +833,130 @@ int main() {
 
 ---
 
-### Phase 7: Vim環境の完成形（目安: 1-2週間）
+### Phase 7: Git統合とデバッグ環境（目安: 1-2週間）
+
+#### このフェーズで得られるもの
+**できるようになること:**
+- エディタを閉じずにGit操作が完結
+- 変更した行が視覚的にハイライト表示される
+- 各行の最終更新者と日時を即座に確認
+- コンパイルエラーを順番に修正していける
+- 複数のエラーを効率的に巡回
+- gdbでのデバッグをNeovim内で実行
+
+**どれくらい楽になるか:**
+- 従来: Neovim終了→ターミナルで`git status`→`git add`→`git commit`（1分）
+- Phase 7後: `:Git status`→ファイル選択→`:Git commit`で完結（15秒）
+- 「誰がこの行を変更した？」→ Git情報が行横に表示（10秒→即座）
+- コンパイルエラー10個: `:cnext`で次々とジャンプして修正（5分→2分）
+- デバッグ: Neovim内でgdb起動、ソースコードを見ながらデバッグ
+- **ターミナルとエディタの往復がゼロに**
+- **ワークフローが50%高速化**
+
+#### 学習内容
+
+1. **Git関連プラグインの追加**
+   ```lua
+   -- lazy.nvimのプラグインリストに追加
+   {
+     'lewis6991/gitsigns.nvim',
+     config = function()
+       require('gitsigns').setup()
+     end
+   },
+   { 'tpope/vim-fugitive' },
+   ```
+
+2. **gitsignsの設定**
+   ```lua
+   require('gitsigns').setup({
+     signs = {
+       add = { text = '+' },
+       change = { text = '~' },
+       delete = { text = '_' },
+       topdelete = { text = '‾' },
+       changedelete = { text = '~' },
+     },
+     on_attach = function(bufnr)
+       local gs = package.loaded.gitsigns
+       
+       -- ナビゲーション
+       vim.keymap.set('n', ']c', function()
+         if vim.wo.diff then return ']c' end
+         vim.schedule(function() gs.next_hunk() end)
+         return '<Ignore>'
+       end, {expr=true, buffer=bufnr})
+       
+       vim.keymap.set('n', '[c', function()
+         if vim.wo.diff then return '[c' end
+         vim.schedule(function() gs.prev_hunk() end)
+         return '<Ignore>'
+       end, {expr=true, buffer=bufnr})
+       
+       -- アクション
+       vim.keymap.set('n', '<leader>hs', gs.stage_hunk, {buffer=bufnr})
+       vim.keymap.set('n', '<leader>hr', gs.reset_hunk, {buffer=bufnr})
+       vim.keymap.set('n', '<leader>hp', gs.preview_hunk, {buffer=bufnr})
+       vim.keymap.set('n', '<leader>hb', function() gs.blame_line{full=true} end, {buffer=bufnr})
+     end
+   })
+   ```
+
+3. **vim-fugitiveの基本操作**
+   ```lua
+   -- キーマッピング
+   vim.keymap.set('n', '<leader>gs', ':Git<CR>', { desc = 'Git status' })
+   vim.keymap.set('n', '<leader>gc', ':Git commit<CR>', { desc = 'Git commit' })
+   vim.keymap.set('n', '<leader>gp', ':Git push<CR>', { desc = 'Git push' })
+   vim.keymap.set('n', '<leader>gl', ':Git log<CR>', { desc = 'Git log' })
+   vim.keymap.set('n', '<leader>gb', ':Git blame<CR>', { desc = 'Git blame' })
+   ```
+
+4. **QuickFixリストの活用**
+   ```lua
+   -- QuickFixのキーマッピング
+   vim.keymap.set('n', '<leader>co', ':copen<CR>', { desc = 'Open quickfix' })
+   vim.keymap.set('n', '<leader>cc', ':cclose<CR>', { desc = 'Close quickfix' })
+   vim.keymap.set('n', '<leader>cn', ':cnext<CR>', { desc = 'Next quickfix' })
+   vim.keymap.set('n', '<leader>cp', ':cprev<CR>', { desc = 'Previous quickfix' })
+   ```
+
+5. **診断（エラー・警告）の設定**
+   ```lua
+   -- 診断の表示設定
+   vim.diagnostic.config({
+     virtual_text = true,
+     signs = true,
+     update_in_insert = false,
+     underline = true,
+     severity_sort = true,
+   })
+   
+   -- 診断ナビゲーション
+   vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Previous diagnostic' })
+   vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Next diagnostic' })
+   vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic' })
+   vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Diagnostic list' })
+   ```
+
+#### クリア条件
+- [ ] gitsignsで変更箇所が行番号の横に表示される
+- [ ] `]c`と`[c`で変更箇所間を移動できる
+- [ ] `:Git`でGitステータスを確認できる
+- [ ] `:Git blame`で各行の変更履歴を見られる
+- [ ] コンパイルエラーが出た時、QuickFixリストから該当箇所にジャンプできる
+- [ ] 複数のエラーを`:cnext`/`:cprev`で巡回できる
+- [ ] LSPの診断（エラー・警告）が表示される
+- [ ] `[d`と`]d`で診断間を移動できる
+
+#### 練習課題
+1. 意図的にコンパイルエラーを3つ入れて、診断機能で修正
+2. Gitで管理されているプロジェクトで、変更箇所を確認しながらコミット
+3. `<leader>hb`でblame情報を確認し、誰がいつ変更したかを把握
+
+---
+
+### Phase 8: Treesitterの導入（目安: 3-5日）
 
 #### このフェーズで得られるもの
 **できるようになること:**
@@ -618,7 +1056,105 @@ int main() {
 
 ## 【応用編】Neovimへの移行
 
-### Phase 8: Neovimの導入（目安: 2-3日）
+### Phase 8: Treesitterの導入（目安: 3-5日）
+
+#### このフェーズで得られるもの
+**できるようになること:**
+- コードの構造を理解したシンタックスハイライト
+- 関数、クラス、変数が文脈に応じて色分け
+- より正確なインデント
+- テキストオブジェクトの賢い選択
+- 複雑なネストも視覚的に理解しやすい
+
+**どれくらい楽になるか:**
+- 従来（正規表現ベース）: 文字列内の関数名もハイライトされて混乱
+- Phase 8後: 「実際の関数」だけが正確にハイライト
+- 長いコードを読む速度: 30%向上（構造が視覚的に明確）
+- 「このカッコどこまで？」→ 色でブロックが分かる
+- リファクタリング時のミス: 50%減少（構造が見えるから）
+- **コードが「読める」から「理解できる」に進化**
+- **他人のコードを読むストレスが激減**
+
+#### 学習内容
+
+1. **nvim-treesitterのインストール**
+   ```lua
+   -- lazy.nvimのプラグインリストに追加
+   {
+     'nvim-treesitter/nvim-treesitter',
+     build = ':TSUpdate',
+     config = function()
+       require('nvim-treesitter.configs').setup({
+         -- インストールする言語
+         ensure_installed = { "c", "cpp", "lua", "vim", "vimdoc", "query" },
+         
+         -- 自動インストール
+         auto_install = true,
+         
+         -- ハイライト設定
+         highlight = {
+           enable = true,
+           additional_vim_regex_highlighting = false,
+         },
+         
+         -- インデント設定
+         indent = {
+           enable = true
+         },
+       })
+     end
+   },
+   ```
+
+2. **Treesitterの動作確認**
+   ```vim
+   " Neovim内で実行
+   :TSInstall c
+   :TSInstall cpp
+   
+   " インストール状況確認
+   :TSInstallInfo
+   
+   " 現在のバッファの構文ツリー確認
+   :InspectTree
+   ```
+
+3. **従来のシンタックスハイライトとの比較**
+   - C言語ファイルを開いて視覚的な違いを確認
+   - 関数定義、関数呼び出し、変数が明確に区別される
+   - ブロック構造が色で分かりやすくなる
+
+#### クリア条件
+- [ ] Treesitterがインストールされた
+- [ ] `:TSInstallInfo`でC/C++パーサーが`✓`になっている
+- [ ] より正確なシンタックスハイライトが表示される
+- [ ] コードの構造を理解したハイライトになっている
+- [ ] 関数定義と関数呼び出しが異なる色で表示される
+- [ ] `:InspectTree`で構文ツリーが表示できる
+
+#### 練習課題
+以下のコードを開いて、Treesitterのハイライトを確認:
+```c
+#include <stdio.h>
+
+// 関数定義
+int calculate(int x, int y) {
+    return x + y;
+}
+
+int main() {
+    // 関数呼び出し
+    int result = calculate(10, 20);
+    printf("Result: %d\n", result);
+    return 0;
+}
+```
+- `calculate`の定義と呼び出しで色が違うか確認
+- `int`, `return`などのキーワードが明確か確認
+
+---
+
+### Phase 9: モダンプラグインの統合（目安: 1-2週間）
 
 #### このフェーズで得られるもの
 **できるようになること:**
@@ -669,7 +1205,149 @@ int main() {
 
 ---
 
-### Phase 9: Lua設定への移行（目安: 1週間）
+### Phase 9: モダンプラグインの統合（目安: 1-2週間）
+
+#### このフェーズで得られるもの
+**できるようになること:**
+- モダンなファイルツリー（nvim-tree）
+- キーバインドのヘルプ表示（which-key）
+- より美しいステータスライン
+- インデントガイドの表示
+- サラウンド編集（括弧の変更など）
+- トラブルシューティング機能
+
+**どれくらい楽になるか:**
+- ファイルツリー: アイコン表示で直感的、Git状態も一目瞭然
+- 「このキー何だっけ？」→ `<leader>`を押すとヘルプがポップアップ
+- インデント階層が視覚的に分かる（ネスト深さが一目瞭然）
+- `cs"'`で囲み文字を変更（ダブルクォート→シングルクォート）
+- **大規模プロジェクト（500+ファイル）も快適に扱える**
+- **見た目の満足度が大幅向上（モチベーション↑）**
+
+#### 学習内容
+
+1. **追加プラグインのインストール**
+   ```lua
+   -- lazy.nvimのプラグインリストに追加
+   
+   -- ファイルツリー（NERDTreeの代替）
+   {
+     "nvim-tree/nvim-tree.lua",
+     dependencies = { "nvim-tree/nvim-web-devicons" },
+     config = function()
+       require("nvim-tree").setup()
+     end
+   },
+   
+   -- キーバインドヘルプ
+   {
+     "folke/which-key.nvim",
+     event = "VeryLazy",
+     config = function()
+       require("which-key").setup()
+     end
+   },
+   
+   -- インデントガイド
+   {
+     "lukas-reineke/indent-blankline.nvim",
+     main = "ibl",
+     config = function()
+       require("ibl").setup()
+     end
+   },
+   
+   -- サラウンド編集
+   {
+     "kylechui/nvim-surround",
+     config = function()
+       require("nvim-surround").setup()
+     end
+   },
+   
+   -- トラブルシューティング
+   {
+     "folke/trouble.nvim",
+     dependencies = { "nvim-tree/nvim-web-devicons" },
+   },
+   ```
+
+2. **nvim-treeの設定**
+   ```lua
+   -- NERDTreeの代わりにnvim-treeを使う
+   vim.keymap.set('n', '<C-n>', ':NvimTreeToggle<CR>')
+   vim.keymap.set('n', '<leader>e', ':NvimTreeFocus<CR>')
+   
+   require("nvim-tree").setup({
+     view = {
+       width = 30,
+     },
+     renderer = {
+       icons = {
+         show = {
+           git = true,
+           file = true,
+           folder = true,
+         },
+       },
+     },
+   })
+   ```
+
+3. **which-keyの設定**
+   ```lua
+   -- リーダーキーを押した時のヘルプ
+   require("which-key").setup({
+     plugins = {
+       spelling = {
+         enabled = true,
+       },
+     },
+   })
+   
+   -- グループ名の設定
+   local wk = require("which-key")
+   wk.register({
+     f = { name = "Find" },
+     g = { name = "Git" },
+     h = { name = "Hunk" },
+     b = { name = "Buffer" },
+     c = { name = "Quickfix/Code" },
+   }, { prefix = "<leader>" })
+   ```
+
+4. **Troubleの設定**
+   ```lua
+   vim.keymap.set("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>")
+   vim.keymap.set("n", "<leader>xw", "<cmd>Trouble workspace_diagnostics<cr>")
+   vim.keymap.set("n", "<leader>xd", "<cmd>Trouble document_diagnostics<cr>")
+   vim.keymap.set("n", "<leader>xl", "<cmd>Trouble loclist<cr>")
+   vim.keymap.set("n", "<leader>xq", "<cmd>Trouble quickfix<cr>")
+   ```
+
+5. **nvim-surroundの使い方**
+   - `ysiw"`：単語をダブルクォートで囲む
+   - `cs"'`：ダブルクォートをシングルクォートに変更
+   - `ds"`：ダブルクォートを削除
+   - `yss)`：行全体を括弧で囲む
+
+#### クリア条件
+- [ ] nvim-treeが起動する（Ctrl+nで表示/非表示）
+- [ ] ファイルツリーにアイコンが表示される
+- [ ] `<leader>`を押すとwhich-keyのヘルプが表示される
+- [ ] インデントガイドが表示される
+- [ ] `ysiw"`で単語を囲める
+- [ ] `<leader>xx`でTroubleが起動する
+- [ ] すべてのプラグインが連携して動作している
+
+#### 練習課題
+1. nvim-treeでファイル操作（作成、削除、リネーム）
+2. which-keyで`<leader>`配下のキーマッピングを確認
+3. nvim-surroundで文字列のクォートを変更
+
+---
+
+### Phase 10: デバッグ環境の構築（目安: 1週間）
 
 #### このフェーズで得られるもの
 **できるようになること:**
@@ -1534,4 +2212,3 @@ A: SSHでリモート開発する場合、Vim/Neovimは圧倒的に有利です�
 
 **あなたの開発人生が、このロードマップで大きく変わります。**
 **最初の一歩を踏み出してみてください！**
-
