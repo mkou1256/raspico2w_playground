@@ -18,15 +18,18 @@ file(GLOB SYSTEM_SRC CONFIGURE_DEPENDS ${SRC_DIR}/system/*.c)
 file(GLOB APP_SRC CONFIGURE_DEPENDS ${SRC_DIR}/app/*.c)
 file(GLOB CONTROL_SRC CONFIGURE_DEPENDS ${SRC_DIR}/control/*.c)
 file(GLOB UTILS_SRC CONFIGURE_DEPENDS ${SRC_DIR}/utils/*.c)
+file(GLOB RTOS_SRC CONFIGURE_DEPENDS ${SRC_DIR}/rtos/*.c)
 add_executable(pico2w 
     ${SYSTEM_SRC}
     ${APP_SRC}
     ${CONTROL_SRC}
     ${UTILS_SRC}
+    ${RTOS_SRC}
 )
 
 # ---- Add include directories ----
 target_include_directories(pico2w PRIVATE ${SRC_DIR}/include)
+target_include_directories(pico2w PRIVATE ${SRC_DIR}/rtos)
 
 # ---- Link required libraries ----
 target_link_libraries(pico2w 

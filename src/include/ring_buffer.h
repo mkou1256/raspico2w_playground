@@ -10,7 +10,7 @@ typedef struct ringBuffer {
     size_t head;       // head index of filled data
     size_t tail;       // tail index of filled data
     size_t count;      // number of filled data
-    mtx_handle_t mtx;  // mtx resource
+    rtos_mutex_t mtx;  // mtx resource
 } ringBuffer_t;
 
 extern int8_t ringBufferInit(ringBuffer_t* rb, uint8_t* buffer, size_t bufferSize);

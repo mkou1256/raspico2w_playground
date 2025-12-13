@@ -35,11 +35,11 @@ const char* dbg_level_colors[4] = {
 };
 
 // dbg bufferのmutex資源
-mtx_handle_t s_mtxDbgPrint = NULL;
+rtos_mutex_t s_mtxDbgPrint = NULL;
 
 int8_t init_dbgPrint(void)
 {
-   s_mtxDbgPrint = make_mtx();
+   s_mtxDbgPrint = rtos_mutex_create();
    if (s_mtxDbgPrint == NULL) {
        // TODO: Assert
        return E_INIT;
@@ -49,7 +49,7 @@ int8_t init_dbgPrint(void)
 
 int32_t dbgPrint(dbg_level_t level, const char* format, ...)
 {
-    take_mtx(s_mtxDbgPrint);
+    rtos_mutex_take(s_mtxDbgPrint);
     int32_t ret = E_OTHER;
 
     memset(s_buffer, 0, DBG_PRINT_BUFFER_SIZE);
@@ -105,7 +105,7 @@ int32_t dbgPrint(dbg_level_t level, const char* format, ...)
     ret = E_SUCCESS;
 
 exit:
-    give_mtx(s_mtxDbgPrint);
+    rtos_mutex_give(s_mtxDbgPrint);
     return ret;
 }
 

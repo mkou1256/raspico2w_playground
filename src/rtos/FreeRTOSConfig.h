@@ -117,7 +117,7 @@
 /* 静的メモリ割り当て: 0=無効, 1=有効
  * コンパイル時にメモリを確保（動的割り当てなし） */
 #ifndef configSUPPORT_STATIC_ALLOCATION
-#define configSUPPORT_STATIC_ALLOCATION         0
+#define configSUPPORT_STATIC_ALLOCATION         1
 #endif
 
 /* 動的メモリ割り当て: 1=有効

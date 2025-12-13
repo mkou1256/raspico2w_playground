@@ -15,7 +15,7 @@ int8_t ringBufferInit(ringBuffer_t* rb, uint8_t* buffer, size_t bufferSize)
     rb->head = 0;
     rb->tail = 0;
     rb->count = 0;
-    rb->mtx = make_mtx();
+    rb->mtx = rtos_mutex_create();
     return E_SUCCESS;
 }
 
@@ -29,7 +29,7 @@ size_t ringBufferAvailableSize(ringBuffer_t* rb)
 
 int32_t ringBufferEnqueue(ringBuffer_t* rb, const uint8_t* data, size_t len)
 {
-    take_mtx(rb->mtx);
+    rtos_mutex_take(rb->mtx);
     int32_t ret = E_OTHER;
 
     if (rb == NULL || data == NULL || len == 0) {
@@ -67,13 +67,13 @@ int32_t ringBufferEnqueue(ringBuffer_t* rb, const uint8_t* data, size_t len)
     ret = bytesEnqueued;
 
 exit:
-    give_mtx(rb->mtx);
+    rtos_mutex_give(rb->mtx);
     return ret;
 }
 
 int32_t ringBufferDequeue(ringBuffer_t* rb, uint8_t* data, size_t len)
 {
-    take_mtx(rb->mtx);
+    rtos_mutex_take(rb->mtx);
     int32_t ret = E_OTHER;
 
     if (rb == NULL || data == NULL || len == 0) {
@@ -112,6 +112,6 @@ int32_t ringBufferDequeue(ringBuffer_t* rb, uint8_t* data, size_t len)
     bytesDequeued += secondChunkReading;
 
 exit:
-    give_mtx(rb->mtx);
+    rtos_mutex_give(rb->mtx);
     return ret;
 }
