@@ -3,7 +3,8 @@
 
 #include "typedef.h"
 
-typedef enum {
+typedef enum
+{
     DBG_LEVEL_DEBUG = 0,
     DBG_LEVEL_INFO,
     DBG_LEVEL_WARN,
@@ -11,6 +12,6 @@ typedef enum {
 } dbg_level_t;
 
 extern int8_t init_dbgPrint(void);
-extern int32_t dbgPrint(dbg_level_t level, const char* format, ...);
+extern int32_t dbgPrint(dbg_level_t level, const char *format, ...);
 
 #endif // __DBG_PRINT__

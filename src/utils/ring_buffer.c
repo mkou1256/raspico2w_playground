@@ -1,10 +1,11 @@
 #include "ring_buffer.h"
-#include "typedef.h"
 #include "rtos_wrapper.h"
+#include "typedef.h"
 
-int8_t ringBufferInit(ringBuffer_t* rb, uint8_t* buffer, size_t bufferSize)
+int8_t ringBufferInit(ringBuffer_t *rb, uint8_t *buffer, size_t bufferSize)
 {
-    if (rb == NULL || buffer == NULL || bufferSize == 0) {
+    if (rb == NULL || buffer == NULL || bufferSize == 0)
+    {
         return E_ARGUMENT;
     }
     rb->buffer = buffer;
@@ -16,26 +17,29 @@ int8_t ringBufferInit(ringBuffer_t* rb, uint8_t* buffer, size_t bufferSize)
     return E_SUCCESS;
 }
 
-size_t ringBufferAvailableSize(ringBuffer_t* rb)
+size_t ringBufferAvailableSize(ringBuffer_t *rb)
 {
-    if (rb == NULL) {
+    if (rb == NULL)
+    {
         return 0;
     }
     return rb->bufferSize - rb->count;
 }
 
-int32_t ringBufferEnqueue(ringBuffer_t* rb, const uint8_t* data, size_t len)
+int32_t ringBufferEnqueue(ringBuffer_t *rb, const uint8_t *data, size_t len)
 {
     rtos_mutex_take(rb->mtx);
     int32_t ret = E_OTHER;
 
-    if (rb == NULL || data == NULL || len == 0) {
+    if (rb == NULL || data == NULL || len == 0)
+    {
         ret = E_ARGUMENT;
         goto exit;
     }
     size_t bytesToEnqueue = (len < ringBufferAvailableSize(rb)) ? len : ringBufferAvailableSize(rb);
-    
-    if (bytesToEnqueue == 0) {
+
+    if (bytesToEnqueue == 0)
+    {
         ret = 0; // バッファがいっぱい
         goto exit;
     }
@@ -51,11 +55,12 @@ int32_t ringBufferEnqueue(ringBuffer_t* rb, const uint8_t* data, size_t len)
     bytesEnqueued += firstChunkWriting;
 
     // 残りデータがなければ終了
-    if (bytesToEnqueue == 0) {
+    if (bytesToEnqueue == 0)
+    {
         ret = bytesEnqueued;
         goto exit;
     }
-    
+
     // 残りのデータがある場合はBufferの先頭から書き込む
     memcpy(&rb->buffer[rb->head], &data[bytesEnqueued], bytesToEnqueue);
     rb->head = (rb->head + bytesToEnqueue) % rb->bufferSize;
@@ -68,18 +73,20 @@ exit:
     return ret;
 }
 
-int32_t ringBufferDequeue(ringBuffer_t* rb, uint8_t* data, size_t len)
+int32_t ringBufferDequeue(ringBuffer_t *rb, uint8_t *data, size_t len)
 {
     rtos_mutex_take(rb->mtx);
     int32_t ret = E_OTHER;
 
-    if (rb == NULL || data == NULL || len == 0) {
+    if (rb == NULL || data == NULL || len == 0)
+    {
         ret = E_ARGUMENT;
         goto exit;
     }
     size_t bytesToDequeue = (len < rb->count) ? len : rb->count;
-    
-    if (bytesToDequeue == 0) {
+
+    if (bytesToDequeue == 0)
+    {
         ret = 0; // バッファが空
         goto exit;
     }
@@ -96,7 +103,8 @@ int32_t ringBufferDequeue(ringBuffer_t* rb, uint8_t* data, size_t len)
     bytesDequeued += firstChunkReading;
 
     // 残りデータがなければ終了
-    if (bytesToDequeue == 0) {
+    if (bytesToDequeue == 0)
+    {
         ret = bytesDequeued;
         goto exit;
     }
