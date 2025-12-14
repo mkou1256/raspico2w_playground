@@ -1,9 +1,6 @@
 #include "ring_buffer.h"
 #include "typedef.h"
 #include "rtos_wrapper.h"
-#include "pico/stdlib.h"
-#include <stdint.h>
-#include <string.h>
 
 int8_t ringBufferInit(ringBuffer_t* rb, uint8_t* buffer, size_t bufferSize)
 {

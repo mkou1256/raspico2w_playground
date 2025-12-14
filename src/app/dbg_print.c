@@ -2,12 +2,8 @@
 #include "typedef.h"
 #include "usb_comm.h"
 #include "rtos_wrapper.h"
-#include "pico/stdlib.h"
 #include "pico/time.h"
 #include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
 
 #define DBG_PRINT_BUFFER_SIZE  1024
 uint8_t s_buffer[DBG_PRINT_BUFFER_SIZE];

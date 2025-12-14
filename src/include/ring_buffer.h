@@ -1,7 +1,7 @@
 #ifndef RING_BUFFER_H
 #define RING_BUFFER_H
 
-#include "pico/stdlib.h"
+#include "typedef.h"
 #include "rtos_wrapper.h" // for mtx
 
 typedef struct ringBuffer {

@@ -69,6 +69,8 @@ void rtos_task_delete(rtos_task_handle_t handle);
     
 void rtos_task_delay(uint32_t delay_ms);
 
+void rtos_schedule_start(void);
+
 /****************************************************
  * Mutex API
  ****************************************************/

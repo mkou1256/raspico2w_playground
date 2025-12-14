@@ -72,6 +72,10 @@ void rtos_task_delay(uint32_t delay_ms)
     vTaskDelay(pdMS_TO_TICKS(delay_ms));
 }
 
+void rtos_schedule_start(void)
+{
+    vTaskStartScheduler();
+}
 
 /****************************************************
  * Mutex Implementation

@@ -1,12 +1,8 @@
-#include "pico/stdlib.h"
-#include "pico/cyw43_arch.h"
 #include "typedef.h"
 #include "rtos_wrapper.h"
 #include "system_init.h"
 #include "dbg_print.h"
 #include "task_test.h" // test
-#include "FreeRTOS.h"
-#include "task.h"
 
 
 int main() {
@@ -35,6 +31,6 @@ int main() {
     );
 
     dbgPrint(DBG_LEVEL_INFO, "Starting scheduler...\r\n");
-    vTaskStartScheduler();
+    rtos_schedule_start();
     // TODO: Assert;
 }

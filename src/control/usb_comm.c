@@ -1,8 +1,6 @@
 #include "usb_comm.h"
 #include "typedef.h"
 #include "ring_buffer.h"
-#include "pico/stdlib.h"
-#include "pico/stdio_usb.h"
 
 #define USB_TX_BUFFER_SIZE  1024
 #define USB_RX_BUFFER_SIZE  1024

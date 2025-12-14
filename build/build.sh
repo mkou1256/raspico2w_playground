@@ -25,6 +25,17 @@ if [ -d "$OUT_DIR" ]; then
     INFO "Clean up old out directory..."
     rm -rf "$OUT_DIR"
 fi
+
+# Clean up stray CMake cache files in build/ directory
+if [ -f "$BUILD_DIR/CMakeCache.txt" ]; then
+    INFO "Removing stray CMakeCache.txt in build/ directory"
+    rm -f "$BUILD_DIR/CMakeCache.txt"
+fi
+if [ -d "$BUILD_DIR/CMakeFiles" ]; then
+    INFO "Removing stray CMakeFiles/ in build/ directory"
+    rm -rf "$BUILD_DIR/CMakeFiles"
+fi
+
 mkdir -p "$OUT_DIR"
 cd "$OUT_DIR"
 INFO "output dir: $OUT_DIR"

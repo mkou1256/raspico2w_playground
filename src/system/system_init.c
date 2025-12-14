@@ -2,9 +2,6 @@
 #include "typedef.h"
 #include "dbg_print.h"
 #include "usb_comm.h"
-#include <stdint.h>
-#include "pico/stdlib.h"
-#include "pico/cyw43_arch.h"
 
 int8_t systemInit()
 {

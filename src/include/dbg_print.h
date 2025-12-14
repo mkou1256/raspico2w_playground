@@ -1,8 +1,7 @@
 #ifndef __DBG_PRINT__
 #define __DBG_PRINT__
 
-#include "pico/stdlib.h"
-#include <stdint.h>
+#include "typedef.h"
 
 typedef enum {
     DBG_LEVEL_DEBUG = 0,
