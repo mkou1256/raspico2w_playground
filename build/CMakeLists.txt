@@ -5,7 +5,7 @@ set(SRC_DIR ${PROJECT_ROOT}/src)
 
 # ---- SDK Import ----
 include(pico_sdk_import.cmake)
-
+include(FreeRTOS_Kernel_import.cmake)
 project(pico2w C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -18,20 +18,24 @@ file(GLOB SYSTEM_SRC CONFIGURE_DEPENDS ${SRC_DIR}/system/*.c)
 file(GLOB APP_SRC CONFIGURE_DEPENDS ${SRC_DIR}/app/*.c)
 file(GLOB CONTROL_SRC CONFIGURE_DEPENDS ${SRC_DIR}/control/*.c)
 file(GLOB UTILS_SRC CONFIGURE_DEPENDS ${SRC_DIR}/utils/*.c)
+file(GLOB RTOS_SRC CONFIGURE_DEPENDS ${SRC_DIR}/rtos/*.c)
 add_executable(pico2w 
     ${SYSTEM_SRC}
     ${APP_SRC}
     ${CONTROL_SRC}
     ${UTILS_SRC}
+    ${RTOS_SRC}
 )
 
 # ---- Add include directories ----
 target_include_directories(pico2w PRIVATE ${SRC_DIR}/include)
+target_include_directories(pico2w PRIVATE ${SRC_DIR}/rtos)
 
 # ---- Link required libraries ----
 target_link_libraries(pico2w 
     pico_stdlib
     pico_cyw43_arch_none
+    FreeRTOS-Kernel-Heap4
 )
 
 # ---- Enable USB or UART (optional) ----

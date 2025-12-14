@@ -2,6 +2,7 @@
 #define RING_BUFFER_H
 
 #include "pico/stdlib.h"
+#include "rtos_wrapper.h" // for mtx
 
 typedef struct ringBuffer {
     uint8_t* buffer;   // buffer pointer
@@ -9,6 +10,7 @@ typedef struct ringBuffer {
     size_t head;       // head index of filled data
     size_t tail;       // tail index of filled data
     size_t count;      // number of filled data
+    rtos_mutex_t mtx;  // mtx resource
 } ringBuffer_t;
 
 extern int8_t ringBufferInit(ringBuffer_t* rb, uint8_t* buffer, size_t bufferSize);
