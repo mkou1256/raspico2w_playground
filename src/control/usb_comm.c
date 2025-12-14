@@ -4,8 +4,8 @@
 #include "pico/stdlib.h"
 #include "pico/stdio_usb.h"
 
-#define USB_TX_BUFFER_SIZE  256
-#define USB_RX_BUFFER_SIZE  256
+#define USB_TX_BUFFER_SIZE  1024
+#define USB_RX_BUFFER_SIZE  1024
 static uint8_t s_usbTxBuffer[USB_TX_BUFFER_SIZE];
 static uint8_t s_usbRxBuffer[USB_RX_BUFFER_SIZE];
 ringBuffer_t s_usbTxRingBuffer;

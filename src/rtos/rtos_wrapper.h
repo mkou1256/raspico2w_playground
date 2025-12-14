@@ -2,7 +2,6 @@
 #define RTOS_WRAPPER_H
 
 #include "FreeRTOS.h"
-#include "rtos_wrapper.h"
 #include "task.h"
 #include "semphr.h"
 #include <stdint.h>

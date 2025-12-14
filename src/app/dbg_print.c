@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define DBG_PRINT_BUFFER_SIZE  512
+#define DBG_PRINT_BUFFER_SIZE  1024
 uint8_t s_buffer[DBG_PRINT_BUFFER_SIZE];
 const char* dbg_level_strings[4] = {
     "DEBUG",
