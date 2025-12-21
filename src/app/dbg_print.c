@@ -114,3 +114,4 @@ int32_t dbgPrint(dbg_level_t level, const char *format, ...)
         rtos_mutex_give(s_mtxDbgPrint);
         return ret;
     }
+}
