@@ -4,6 +4,11 @@
 #include "task_test.h" // test
 #include "typedef.h"
 
+/****************************************************
+ * forward declaration
+ ****************************************************/
+int main();
+
 int main()
 {
 

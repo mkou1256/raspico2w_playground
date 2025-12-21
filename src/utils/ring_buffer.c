@@ -2,11 +2,20 @@
 #include "rtos_wrapper.h"
 #include "typedef.h"
 
-int8_t ringBufferInit(ringBuffer_t *rb, uint8_t *buffer, size_t bufferSize)
+/****************************************************
+ * forward declaration
+ ****************************************************/
+bool ringBufferInit(ringBuffer_t *rb, uint8_t *buffer, size_t bufferSize);
+size_t ringBufferAvailableSize(ringBuffer_t *rb);
+void ringBufferClear(ringBuffer_t *rb);
+int32_t ringBufferEnqueue(ringBuffer_t *rb, const uint8_t *data, size_t len);
+int32_t ringBufferDequeue(ringBuffer_t *rb, uint8_t *data, size_t len);
+
+bool ringBufferInit(ringBuffer_t *rb, uint8_t *buffer, size_t bufferSize)
 {
     if (rb == NULL || buffer == NULL || bufferSize == 0)
     {
-        return E_ARGUMENT;
+        return false;
     }
     rb->buffer = buffer;
     rb->bufferSize = bufferSize;
@@ -14,7 +23,7 @@ int8_t ringBufferInit(ringBuffer_t *rb, uint8_t *buffer, size_t bufferSize)
     rb->tail = 0;
     rb->count = 0;
     rb->mtx = rtos_mutex_create();
-    return E_SUCCESS;
+    return true;
 }
 
 size_t ringBufferAvailableSize(ringBuffer_t *rb)
@@ -24,6 +33,16 @@ size_t ringBufferAvailableSize(ringBuffer_t *rb)
         return 0;
     }
     return rb->bufferSize - rb->count;
+}
+
+void ringBufferClear(ringBuffer_t *rb)
+{
+    rtos_mutex_take(rb->mtx);
+    rb->head = 0;
+    rb->tail = 0;
+    rb->count = 0;
+    memset(rb->buffer, 0, rb->bufferSize);
+    rtos_mutex_give(rb->mtx);
 }
 
 int32_t ringBufferEnqueue(ringBuffer_t *rb, const uint8_t *data, size_t len)
@@ -36,18 +55,21 @@ int32_t ringBufferEnqueue(ringBuffer_t *rb, const uint8_t *data, size_t len)
         ret = E_ARGUMENT;
         goto exit;
     }
-    size_t bytesToEnqueue = (len < ringBufferAvailableSize(rb)) ? len : ringBufferAvailableSize(rb);
+    size_t bytesToEnqueue =
+        (len < ringBufferAvailableSize(rb)) ? len : ringBufferAvailableSize(rb);
 
     if (bytesToEnqueue == 0)
     {
-        ret = 0; // バッファがいっぱい
+        ret = E_WOULDBLOCK; // バッファがいっぱい
         goto exit;
     }
     size_t bytesEnqueued = 0;
 
     // バッファの末尾まで書き込めるサイズを計算し、memcpyで書き込む
     size_t firstChunkRemaining = rb->bufferSize - rb->head;
-    size_t firstChunkWriting = (bytesToEnqueue < firstChunkRemaining) ? bytesToEnqueue : firstChunkRemaining;
+    size_t firstChunkWriting = (bytesToEnqueue < firstChunkRemaining)
+                                   ? bytesToEnqueue
+                                   : firstChunkRemaining;
     memcpy(&rb->buffer[rb->head], data, firstChunkWriting);
     rb->head = (rb->head + firstChunkWriting) % rb->bufferSize;
     rb->count += firstChunkWriting;
@@ -87,15 +109,18 @@ int32_t ringBufferDequeue(ringBuffer_t *rb, uint8_t *data, size_t len)
 
     if (bytesToDequeue == 0)
     {
-        ret = 0; // バッファが空
+        ret = E_WOULDBLOCK; // バッファが空
         goto exit;
     }
     size_t bytesDequeued = 0;
 
-    // tail --> head or tail --> buffer end まで読み込めるサイズを計算し、memcpyで読み込む
+    // tail --> head or tail --> buffer end
+    // まで読み込めるサイズを計算し、memcpyで読み込む
     size_t firstChunkEndIdx = (rb->head > rb->tail) ? rb->head : rb->bufferSize;
     size_t firstChunkRemaining = firstChunkEndIdx - rb->tail;
-    size_t firstChunkReading = (bytesToDequeue < firstChunkRemaining) ? bytesToDequeue : firstChunkRemaining;
+    size_t firstChunkReading = (bytesToDequeue < firstChunkRemaining)
+                                   ? bytesToDequeue
+                                   : firstChunkRemaining;
     memcpy(data, &rb->buffer[rb->tail], firstChunkReading);
     rb->tail = (rb->tail + firstChunkReading) % rb->bufferSize;
     rb->count -= firstChunkReading;

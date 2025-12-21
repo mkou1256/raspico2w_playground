@@ -1,13 +1,14 @@
 /**
  * @file freertos_hooks.c
- * @brief FreeRTOS hook and callback functions implementation for Raspberry Pi Pico 2W
- * 
+ * @brief FreeRTOS hook and callback functions implementation for Raspberry Pi
+ * Pico 2W
+ *
  * This file implements the required callback functions for FreeRTOS when using
  * static memory allocation (configSUPPORT_STATIC_ALLOCATION = 1).
- * 
+ *
  * These functions are mandatory when static allocation is enabled and provide
  * the memory buffers for FreeRTOS internal tasks.
- * 
+ *
  * NOTE: Do NOT create a separate header file for these functions.
  * The function declarations already exist in FreeRTOS's task.h
  */
@@ -15,6 +16,37 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include <stdio.h>
+
+/****************************************************
+ * forward declaration
+ ****************************************************/
+#if configSUPPORT_STATIC_ALLOCATION
+void vApplicationGetIdleTaskMemory(
+    StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer,
+    configSTACK_DEPTH_TYPE *pulIdleTaskStackSize);
+void vApplicationGetPassiveIdleTaskMemory(
+    StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer,
+    configSTACK_DEPTH_TYPE *pulIdleTaskStackSize,
+    BaseType_t xPassiveIdleTaskIndex);
+#if configUSE_TIMERS
+void vApplicationGetTimerTaskMemory(
+    StaticTask_t **ppxTimerTaskTCBBuffer, StackType_t **ppxTimerTaskStackBuffer,
+    configSTACK_DEPTH_TYPE *pulTimerTaskStackSize);
+#endif
+#endif
+#if configCHECK_FOR_STACK_OVERFLOW
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName);
+#endif
+#if configUSE_IDLE_HOOK
+void vApplicationIdleHook(void);
+#endif
+#if configUSE_TICK_HOOK
+void vApplicationTickHook(void);
+#endif
+#if configUSE_MALLOC_FAILED_HOOK
+void vApplicationMallocFailedHook(void);
+#endif
+void vPrintHeapStats(void);
 
 /* ========================================================================== */
 /* Static Memory Allocation Callbacks (REQUIRED)                             */
@@ -28,13 +60,13 @@ static StackType_t xIdleStack[configMINIMAL_STACK_SIZE];
 
 /**
  * @brief Provides memory for the Idle task
- * 
+ *
  * This function is called by FreeRTOS during scheduler initialization to obtain
  * memory for the Idle task. The Idle task runs when no other tasks are ready.
  */
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
-                                    StackType_t **ppxIdleTaskStackBuffer,
-                                    configSTACK_DEPTH_TYPE *pulIdleTaskStackSize)
+                                   StackType_t **ppxIdleTaskStackBuffer,
+                                   configSTACK_DEPTH_TYPE *pulIdleTaskStackSize)
 {
     *ppxIdleTaskTCBBuffer = &xIdleTaskTCBBuffer;
     *ppxIdleTaskStackBuffer = xIdleStack;
@@ -43,21 +75,21 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
 
 /* Static memory buffers for Passive Idle Task (Core 1 on RP2350) */
 /* This is only needed for multi-core configurations */
-#if 1 
+#if 1
 
 static StaticTask_t xPassiveIdleTaskTCBBuffer;
 static StackType_t xPassiveIdleStack[configMINIMAL_STACK_SIZE];
 
 /**
  * @brief Provides memory for the Passive Idle task (Pico 2 multi-core)
- * 
+ *
  * The RP2350 (Raspberry Pi Pico 2) has dual Cortex-M33 cores.
  * This function provides memory for the idle task on the second core.
  */
-void vApplicationGetPassiveIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
-                                           StackType_t **ppxIdleTaskStackBuffer,
-                                           configSTACK_DEPTH_TYPE *pulIdleTaskStackSize,
-                                           BaseType_t xPassiveIdleTaskIndex)
+void vApplicationGetPassiveIdleTaskMemory(
+    StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer,
+    configSTACK_DEPTH_TYPE *pulIdleTaskStackSize,
+    BaseType_t xPassiveIdleTaskIndex)
 {
     *ppxIdleTaskTCBBuffer = &xPassiveIdleTaskTCBBuffer;
     *ppxIdleTaskStackBuffer = xPassiveIdleStack;
@@ -74,13 +106,13 @@ static StackType_t xTimerStack[configTIMER_TASK_STACK_DEPTH];
 
 /**
  * @brief Provides memory for the Timer task
- * 
- * This function is called when software timers are enabled (configUSE_TIMERS = 1)
- * and static allocation is used. The Timer task manages software timers.
+ *
+ * This function is called when software timers are enabled (configUSE_TIMERS =
+ * 1) and static allocation is used. The Timer task manages software timers.
  */
-void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer,
-                                     StackType_t **ppxTimerTaskStackBuffer,
-                                     configSTACK_DEPTH_TYPE *pulTimerTaskStackSize)
+void vApplicationGetTimerTaskMemory(
+    StaticTask_t **ppxTimerTaskTCBBuffer, StackType_t **ppxTimerTaskStackBuffer,
+    configSTACK_DEPTH_TYPE *pulTimerTaskStackSize)
 {
     *ppxTimerTaskTCBBuffer = &xTimerTaskTCBBuffer;
     *ppxTimerTaskStackBuffer = xTimerStack;
@@ -99,10 +131,10 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer,
 
 /**
  * @brief Stack overflow detection hook
- * 
+ *
  * Called when FreeRTOS detects a stack overflow. This is a critical error
  * that indicates a task has used more stack space than allocated.
- * 
+ *
  * @param xTask Handle of the task that overflowed
  * @param pcTaskName Name of the task (null-terminated string)
  */
@@ -110,14 +142,15 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 {
     /* Disable interrupts to prevent further damage */
     taskDISABLE_INTERRUPTS();
-    
+
     /* Log the error (if printf is available) */
     printf("STACK OVERFLOW: Task '%s' (handle: %p)\n", pcTaskName, xTask);
-    
+
     /* Infinite loop - system should be reset */
-    for (;;) {
+    for (;;)
+    {
         /* You could toggle an LED here to indicate error */
-        __asm volatile ("nop");
+        __asm volatile("nop");
     }
 }
 
@@ -127,12 +160,12 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 
 /**
  * @brief Idle task hook function
- * 
+ *
  * Called during each iteration of the Idle task. Useful for:
  * - Putting the CPU into low-power sleep mode
  * - Background garbage collection
  * - Feeding a watchdog timer
- * 
+ *
  * WARNING: This function must NOT attempt to block or suspend.
  */
 void vApplicationIdleHook(void)
@@ -147,9 +180,9 @@ void vApplicationIdleHook(void)
 
 /**
  * @brief Tick interrupt hook function
- * 
- * Called from the tick interrupt at every tick (e.g., every 1ms if tick rate is 1000Hz).
- * Must be very short and fast - no blocking operations allowed.
+ *
+ * Called from the tick interrupt at every tick (e.g., every 1ms if tick rate is
+ * 1000Hz). Must be very short and fast - no blocking operations allowed.
  */
 void vApplicationTickHook(void)
 {
@@ -164,7 +197,7 @@ void vApplicationTickHook(void)
 
 /**
  * @brief Malloc failed hook function
- * 
+ *
  * Called when pvPortMalloc() fails to allocate memory.
  * This indicates the heap is exhausted or too fragmented.
  */
@@ -172,12 +205,13 @@ void vApplicationMallocFailedHook(void)
 {
     /* Disable interrupts */
     taskDISABLE_INTERRUPTS();
-    
+
     printf("MALLOC FAILED: FreeRTOS heap exhausted!\n");
-    
+
     /* Infinite loop - system should be reset */
-    for (;;) {
-        __asm volatile ("nop");
+    for (;;)
+    {
+        __asm volatile("nop");
     }
 }
 
@@ -189,7 +223,7 @@ void vApplicationMallocFailedHook(void)
 
 /**
  * @brief Get current FreeRTOS heap usage statistics
- * 
+ *
  * Utility function to help debug memory issues.
  * Prints heap usage information if printf is available.
  */
@@ -197,13 +231,20 @@ void vPrintHeapStats(void)
 {
     HeapStats_t heap_stats;
     vPortGetHeapStats(&heap_stats);
-    
+
     printf("FreeRTOS Heap Statistics:\n");
-    printf("  Available heap space:        %u bytes\n", heap_stats.xAvailableHeapSpaceInBytes);
-    printf("  Largest free block:          %u bytes\n", heap_stats.xSizeOfLargestFreeBlockInBytes);
-    printf("  Smallest free block:         %u bytes\n", heap_stats.xSizeOfSmallestFreeBlockInBytes);
-    printf("  Number of free blocks:       %u\n", heap_stats.xNumberOfFreeBlocks);
-    printf("  Minimum ever free bytes:     %u bytes\n", heap_stats.xMinimumEverFreeBytesRemaining);
-    printf("  Successful allocations:      %u\n", heap_stats.xNumberOfSuccessfulAllocations);
-    printf("  Successful frees:            %u\n", heap_stats.xNumberOfSuccessfulFrees);
+    printf("  Available heap space:        %u bytes\n",
+           heap_stats.xAvailableHeapSpaceInBytes);
+    printf("  Largest free block:          %u bytes\n",
+           heap_stats.xSizeOfLargestFreeBlockInBytes);
+    printf("  Smallest free block:         %u bytes\n",
+           heap_stats.xSizeOfSmallestFreeBlockInBytes);
+    printf("  Number of free blocks:       %u\n",
+           heap_stats.xNumberOfFreeBlocks);
+    printf("  Minimum ever free bytes:     %u bytes\n",
+           heap_stats.xMinimumEverFreeBytesRemaining);
+    printf("  Successful allocations:      %u\n",
+           heap_stats.xNumberOfSuccessfulAllocations);
+    printf("  Successful frees:            %u\n",
+           heap_stats.xNumberOfSuccessfulFrees);
 }

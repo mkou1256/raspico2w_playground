@@ -22,10 +22,11 @@ typedef struct
     int8_t registered;        // 登録済みフラグ: 0->未登録, 1->登録済み
 } usbRxQueue_t;
 
-extern int32_t usbCommInit();
+extern bool usbCommInit();
 extern int32_t usbBufferEnqueue(const char *str, size_t len);
 extern int32_t usbFlush();
 extern int32_t usbTx(const char *str, size_t len);
 extern void usbRecv_callback(void *params);
+extern int8_t registerUsbRxQueue(rtos_queue_t *p_appQueue);
 
 #endif // __USB_COMM__

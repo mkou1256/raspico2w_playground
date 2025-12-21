@@ -5,6 +5,7 @@
 #include "pico/cyw43_arch.h"
 #include "pico/stdio_usb.h"
 #include "pico/stdlib.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -16,6 +17,7 @@
 #define E_BUFSIZE -4
 #define E_USBCOMM -5
 #define E_NO_RESOURCE -6
+#define E_WOULDBLOCK -7
 #define E_OTHER -99
 
 // BIT
