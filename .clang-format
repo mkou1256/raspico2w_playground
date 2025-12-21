@@ -1,0 +1,4 @@
+# 基本スタイルをベースに設定
+BasedOnStyle: Microsoft  # Google, LLVM, Microsoft, Chromium, Mozilla などから選択
+
+ColumnLimit: 80  # 1行あたりの最大文字数

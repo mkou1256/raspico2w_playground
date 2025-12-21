@@ -2,5 +2,18 @@
     "git.ignoredRepositories": [
         "${workspaceFolder}/libs/pico-sdk"
     ],
-    "cmake.sourceDirectory": "/home/mkou/pico/raspico2w_playground/build"
+    "cmake.sourceDirectory": "/home/mkou/pico/raspico2w_playground/build",
+    // c_cpp フォーマッタ
+    // 保存時に自動フォーマット
+    "editor.formatOnSave": true,
+    // C/C++ファイルのデフォルトフォーマッタ
+    "[c]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    // clang-formatの設定ファイルを使用
+    "C_Cpp.clang_format_style": "file",
+    "C_Cpp.clang_format_fallbackStyle": "Microsoft"
 }
