@@ -15,6 +15,7 @@
 #define E_ARGUMENT -3
 #define E_BUFSIZE -4
 #define E_USBCOMM -5
+#define E_NO_RESOURCE -6
 #define E_OTHER -99
 
 // BIT

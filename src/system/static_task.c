@@ -1,3 +1,4 @@
+#include "static_task.h"
 #include "rtos_wrapper.h"
 #include "typedef.h"
 #include "usb_comm.h"
