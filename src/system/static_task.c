@@ -3,6 +3,11 @@
 #include "typedef.h"
 #include "usb_comm.h"
 
+/****************************************************
+ * forward declaration
+ ****************************************************/
+bool taskInit();
+
 // usb comm task
 #define STACKSIZE_USB_FLUSH 512
 rtos_stack_t stack_usbFlush[STACKSIZE_USB_FLUSH];
@@ -14,15 +19,17 @@ rtos_stack_t stack_usbDrain[STACKSIZE_USB_DRAIN];
 rtos_tcb_t tcb_usbDrain;
 rtos_task_handle_t task_handle_usbDrain;
 
-int8_t taskInit()
+bool taskInit()
 {
-    int8_t ret = E_SUCCESS;
+    rtos_result_t ret =
+        rtos_task_create_static(usbFlush_task, "usbFlush", STACKSIZE_USB_FLUSH,
+                                NULL, RTOS_PRIORITY_NORMAL, stack_usbFlush,
+                                &tcb_usbFlush, &task_handle_usbFlush);
 
-    ret |= rtos_task_create_static(usbFlush_task, "usbFlush", STACKSIZE_USB_FLUSH, NULL, RTOS_PRIORITY_NORMAL,
-                                   stack_usbFlush, &tcb_usbFlush, &task_handle_usbFlush);
+    ret +=
+        rtos_task_create_static(usbDrain_task, "usbDrain", STACKSIZE_USB_DRAIN,
+                                NULL, RTOS_PRIORITY_NORMAL, stack_usbDrain,
+                                &tcb_usbDrain, &task_handle_usbDrain);
 
-    ret |= rtos_task_create_static(usbDrain_task, "usbDrain", STACKSIZE_USB_DRAIN, NULL, RTOS_PRIORITY_NORMAL,
-                                   stack_usbDrain, &tcb_usbDrain, &task_handle_usbDrain);
-
-    return (ret == E_SUCCESS) ? E_SUCCESS : E_INIT;
+    return (ret == RTOS_OK) ? true : false;
 }

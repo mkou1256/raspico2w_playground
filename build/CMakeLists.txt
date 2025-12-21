@@ -28,8 +28,11 @@ add_executable(pico2w
 )
 
 # ---- Add include directories ----
-target_include_directories(pico2w PRIVATE ${SRC_DIR}/include)
+target_include_directories(pico2w PRIVATE ${SRC_DIR}/app)
+target_include_directories(pico2w PRIVATE ${SRC_DIR}/control)
 target_include_directories(pico2w PRIVATE ${SRC_DIR}/rtos)
+target_include_directories(pico2w PRIVATE ${SRC_DIR}/system)
+target_include_directories(pico2w PRIVATE ${SRC_DIR}/utils)
 
 # ---- Link required libraries ----
 target_link_libraries(pico2w 

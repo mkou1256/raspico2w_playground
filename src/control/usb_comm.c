@@ -13,6 +13,7 @@
 #define USB_TX_BUFFER_SIZE 1024
 #define USB_RX_BUFFER_SIZE 256
 static uint8_t s_usbTxBuffer[USB_TX_BUFFER_SIZE]; // リングバッファーに使用
+static uint8_t s_usbFlushWorkBuffer[USB_TX_BUFFER_SIZE];
 static uint8_t s_usbRxBuffer[USB_RX_BUFFER_SIZE];
 ringBuffer_t s_usbTxRingBuffer;
 
@@ -31,45 +32,58 @@ static usbRxData_t s_usbRxData; // 受信データ格納用構造体
 usbRxQueue_t s_usbRxAppQueues[MAX_USBRX_APP_QUEUE];
 
 /****************************************************
+ * forward declaration
+ ****************************************************/
+bool usbCommInit();
+int32_t usbBufferEnqueue(const char *str, size_t len);
+int32_t usbFlush();
+int32_t usbTx(const char *str, size_t len);
+void usbRecv_callback(void *params);
+bool makeRxData(const uint8_t *data, size_t len);
+bool enqueueUsbRxData_App(usbRxData_t *p_data);
+void initUsbRxAppQueues();
+int8_t registerUsbRxQueue(rtos_queue_t *p_appQueue);
+
+/****************************************************
  * Init Proc
  ****************************************************/
-int32_t usbCommInit()
+bool usbCommInit()
 {
-    static int8_t init = 0;
-    if (init == 1)
+    static bool isInitialized = false;
+    if (isInitialized)
     {
-        return E_SUCCESS;
+        return true;
     }
     if (!stdio_usb_init())
     {
-        return E_INIT;
+        return false;
     }
 
     // リングバッファの初期化
     if (ringBufferInit(&s_usbTxRingBuffer, s_usbTxBuffer, USB_TX_BUFFER_SIZE) !=
         E_SUCCESS)
     {
-        return E_INIT;
+        return false;
     }
 
     flag_usbFlush = rtos_flag_create_static(&flag_buf_usbFlush);
     if (flag_usbFlush == NULL)
     {
-        return E_INIT;
+        return false;
     }
 
     flag_usbDrain = rtos_flag_create_static(&flag_buf_usbDrain);
     if (flag_usbDrain == NULL)
     {
-        return E_INIT;
+        return false;
     }
 
     stdio_set_chars_available_callback(usbRecv_callback, NULL);
 
     initUsbRxAppQueues();
 
-    init = 1;
-    return E_SUCCESS;
+    isInitialized = 1;
+    return true;
 }
 
 /****************************************************
@@ -88,7 +102,10 @@ int32_t usbBufferEnqueue(const char *str, size_t len)
     ringBuffer_t *pRb = &s_usbTxRingBuffer;
     int32_t ret = ringBufferEnqueue(pRb, (const uint8_t *)str, len);
 
-    rtos_bit_t bit = rtos_flag_set(flag_usbFlush, BIT_0);
+    if (ret > 0)
+    {
+        rtos_bit_t bit = rtos_flag_set(flag_usbFlush, BIT_0);
+    }
 
     return ret;
 }
@@ -97,13 +114,26 @@ int32_t usbFlush()
 {
     int32_t ret = E_OTHER;
     ringBuffer_t *pRb = &s_usbTxRingBuffer;
-    uint8_t workBuffer[USB_TX_BUFFER_SIZE];
 
-    int32_t len = ringBufferDequeue(pRb, workBuffer, USB_TX_BUFFER_SIZE);
-    if (len > 0)
+    while (ringBufferAvailableSize(pRb) > 0)
     {
-        ret = stdio_put_string((const char *)workBuffer, len, false, false);
-        // TODO: 低レベルAPIに変更
+        int32_t len =
+            ringBufferDequeue(pRb, s_usbFlushWorkBuffer, USB_TX_BUFFER_SIZE);
+        if (len == E_WOULDBLOCK)
+        {
+            ret = 0;
+            break;
+        }
+        else if (len < 0)
+        {
+            dbgPrint(DBG_LEVEL_ERROR, "usbFlush: ringBufferDequeue error\r\n");
+            ringBufferClear(pRb);
+            ret = len;
+            break;
+        }
+
+        ret = stdio_put_string((const char *)s_usbFlushWorkBuffer, len, false,
+                               false);
         if (ret < 0)
         {
             ret = E_USBCOMM;
@@ -119,6 +149,11 @@ int32_t usbTx(const char *str, size_t len)
     while (totalSent < len)
     {
         ret = usbBufferEnqueue(str + totalSent, len - totalSent);
+        if (ret == E_WOULDBLOCK)
+        {
+            rtos_task_delay(1); // バッファがいっぱいなら少し待つ
+            continue;
+        }
         if (ret < 0)
         {
             return ret; // エラー
@@ -128,7 +163,7 @@ int32_t usbTx(const char *str, size_t len)
     return totalSent;
 }
 
-rtos_task_func_t usbFlush_task(void *params)
+void usbFlush_task(void *params)
 {
     while (1)
     {
@@ -144,17 +179,17 @@ rtos_task_func_t usbFlush_task(void *params)
  *  2. usbDrain_taskでデータを取り出す
  *  3. 登録されたアプリケーションQueueにデータを格納
  ****************************************************/
-int8_t makeRxData(const uint8_t *data, size_t len)
+bool makeRxData(const uint8_t *data, size_t len)
 {
     memset(&s_usbRxData, 0, sizeof(usbRxData_t));
     s_usbRxData.id = 0;
     s_usbRxData.dataLen = len;
     memcpy(s_usbRxData.data, data, len);
 
-    return E_SUCCESS;
+    return true;
 }
 
-int8_t enqueueUsbRxData_App(usbRxData_t *p_data)
+bool enqueueUsbRxData_App(usbRxData_t *p_data)
 {
     for (int i = 0; i < MAX_USBRX_APP_QUEUE; i++)
     {
@@ -163,35 +198,37 @@ int8_t enqueueUsbRxData_App(usbRxData_t *p_data)
             rtos_queue_t queue = *(s_usbRxAppQueues[i].p_appQueue);
             if (rtos_queue_send(queue, (void *)p_data, 0) == RTOS_OK)
             {
-                return E_SUCCESS;
+                return true;
             }
         }
-        return E_OTHER;
     }
+    return false;
 }
 
-rtos_task_func_t usbDrain_task(void *params)
+void usbDrain_task(void *params)
 {
     while (1)
     {
         rtos_bit_t bit =
             rtos_flag_wait(flag_usbDrain, BIT_0, TRUE, FALSE, MAX_DELAY);
-        int read = stdio_usb_in_chars(s_usbRxBuffer, USB_RX_BUFFER_SIZE);
-        if (read <= 0)
+        int readSize = stdio_get_until(s_usbRxBuffer, USB_RX_BUFFER_SIZE,
+                                       at_the_end_of_time);
+        if (readSize <= 0)
         {
             dbgPrint(DBG_LEVEL_WARN, "[usbDrain_task] No data received\n");
             continue;
         }
 
-        read = (read > USBRX_DATA_MAX_SIZE) ? USBRX_DATA_MAX_SIZE : read;
-        if (makeRxData(s_usbRxBuffer, read) != E_SUCCESS)
+        readSize =
+            (readSize > USBRX_DATA_MAX_SIZE) ? USBRX_DATA_MAX_SIZE : readSize;
+        if (!makeRxData(s_usbRxBuffer, readSize))
         {
             dbgPrint(DBG_LEVEL_ERROR,
                      "[usbDrain_task] Failed to make RxData\n");
             continue;
         }
 
-        if (enqueueUsbRxData_App(&s_usbRxData) != E_SUCCESS)
+        if (!enqueueUsbRxData_App(&s_usbRxData))
         {
             dbgPrint(
                 DBG_LEVEL_WARN,

@@ -4,6 +4,12 @@
 #include "rtos_wrapper.h"
 #include "usb_comm.h"
 
+/****************************************************
+ * forward declaration
+ ****************************************************/
+void task1(void *pvParameters);
+void task2(void *pvParameters);
+
 void task1(void *pvParameters)
 {
     static uint32_t count = 0;

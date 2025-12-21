@@ -11,7 +11,7 @@ typedef enum
     DBG_LEVEL_ERROR
 } dbg_level_t;
 
-extern int8_t init_dbgPrint(void);
+extern bool init_dbgPrint(void);
 extern int32_t dbgPrint(dbg_level_t level, const char *format, ...);
 
 #endif // __DBG_PRINT__
