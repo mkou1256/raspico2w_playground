@@ -76,38 +76,41 @@ int32_t dbgPrint(dbg_level_t level, const char *format, ...)
     va_end(args);
     if (msg_len < 0)
     {
-        ret = E_OTHER;
-        goto exit;
-    }
+        if (msg_len < 0)
+        {
+            ret = E_OTHER;
+            goto exit;
+        }
 
-    // 色をリセットする
-    int32_t suffix_len = snprintf((char *)s_buffer + prefix_len + msg_len,
-                                  DBG_PRINT_BUFFER_SIZE - prefix_len - msg_len,
-                                  "%s", ANSI_COLOR_RESET);
-    if (suffix_len < 0)
-    {
-        ret = E_OTHER;
-        goto exit;
-    }
+        // 色をリセットする
+        int32_t suffix_len =
+            snprintf((char *)s_buffer + prefix_len + msg_len,
+                     DBG_PRINT_BUFFER_SIZE - prefix_len - msg_len, "%s",
+                     ANSI_COLOR_RESET);
+        if (suffix_len < 0)
+        {
+            ret = E_OTHER;
+            goto exit;
+        }
 
-    // 実際に書き込まれた総長さを計算
-    int32_t total_len = prefix_len + msg_len + suffix_len;
-    if (total_len >= DBG_PRINT_BUFFER_SIZE)
-    {
-        // 切り詰められた場合、実際のバッファサイズ-1（null終端分）
-        total_len = DBG_PRINT_BUFFER_SIZE - 1;
-    }
+        // 実際に書き込まれた総長さを計算
+        int32_t total_len = prefix_len + msg_len + suffix_len;
+        if (total_len >= DBG_PRINT_BUFFER_SIZE)
+        {
+            // 切り詰められた場合、実際のバッファサイズ-1（null終端分）
+            total_len = DBG_PRINT_BUFFER_SIZE - 1;
+        }
 
-    // USB経由で送信
-    int32_t sent_len = usbTx((const char *)s_buffer, total_len);
-    if (sent_len < 0)
-    {
-        ret = sent_len; // 送り切れる or 負のエラーが返る
-        goto exit;
-    }
-    ret = E_SUCCESS;
+        // USB経由で送信
+        int32_t sent_len = usbTx((const char *)s_buffer, total_len);
+        if (sent_len < 0)
+        {
+            ret = sent_len; // 送り切れる or 負のエラーが返る
+            goto exit;
+        }
+        ret = E_SUCCESS;
 
-exit:
-    rtos_mutex_give(s_mtxDbgPrint);
-    return ret;
-}
+    exit:
+        rtos_mutex_give(s_mtxDbgPrint);
+        return ret;
+    }
